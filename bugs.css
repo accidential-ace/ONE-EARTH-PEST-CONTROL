@@ -1,0 +1,67 @@
+.bug {
+    position: fixed;
+    pointer-events: none;
+    z-index: 1000;
+    transition: transform 0.3s;
+    filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.2));
+}
+
+.bug i {
+    display: inline-block;
+}
+
+.bug-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 1000;
+    overflow: hidden;
+}
+
+@keyframes crawlLeftToRight {
+    0% {
+        left: -50px;
+    }
+    100% {
+        left: calc(100vw + 50px);
+    }
+}
+
+@keyframes crawlRightToLeft {
+    0% {
+        right: -50px;
+        transform: scaleX(-1);
+    }
+    100% {
+        right: calc(100vw + 50px);
+        transform: scaleX(-1);
+    }
+}
+
+.crawl-left-to-right {
+    animation: crawlLeftToRight 15s linear;
+}
+
+.crawl-right-to-left {
+    animation: crawlRightToLeft 15s linear;
+}
+
+/* Motion Patterns */
+.motion-zigzag {
+    animation-timing-function: linear;
+}
+
+.motion-circular {
+    animation-timing-function: linear;
+}
+
+.motion-wavy {
+    animation-timing-function: ease-in-out;
+}
+
+.motion-straight {
+    animation-timing-function: linear;
+}
