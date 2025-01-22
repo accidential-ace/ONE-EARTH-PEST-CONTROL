@@ -151,8 +151,161 @@ document.addEventListener('DOMContentLoaded', function() {
         lastScroll = currentScroll;
     }, 100));
 
-    // Server URL constant
-    const SERVER_URL = 'http://localhost:3000';
+    // Server URL - automatically detect if we're in production or development
+    const SERVER_URL = window.location.hostname === 'localhost' 
+        ? 'http://localhost:3000' 
+        : window.location.origin;
+
+    // Utility function to validate phone number
+    function validatePhoneNumber(phone) {
+        const phoneRegex = /^\+?[\d\s-]{10,}$/;
+        return phoneRegex.test(phone);
+    }
+
+    // Utility function to validate email
+    function validateEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+
+    // Handle call form submission
+    if (callForm) {
+        callForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitBtn = callForm.querySelector('.submit-btn');
+            const nameInput = callForm.querySelector('input[name="name"]');
+            const phoneInput = callForm.querySelector('input[name="phone"]');
+            
+            if (!nameInput || !phoneInput) {
+                showNotification('Form error: Missing required fields', 'error');
+                return;
+            }
+            
+            const name = nameInput.value.trim();
+            const phone = phoneInput.value.trim();
+
+            // Validation
+            if (!name) {
+                showNotification('Please enter your name', 'error');
+                nameInput.focus();
+                return;
+            }
+            if (!phone) {
+                showNotification('Please enter your phone number', 'error');
+                phoneInput.focus();
+                return;
+            }
+            if (!validatePhoneNumber(phone)) {
+                showNotification('Please enter a valid phone number', 'error');
+                phoneInput.focus();
+                return;
+            }
+
+            // Disable submit button and show loading state
+            submitBtn.disabled = true;
+            const originalBtnText = submitBtn.textContent;
+            submitBtn.textContent = 'Sending...';
+
+            try {
+                const response = await fetch(`${SERVER_URL}/api/call-request`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name, phone })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Failed to submit request');
+                }
+
+                // Show success message and reset form
+                showNotification('Thank you! We will call you back soon.', 'success');
+                callForm.reset();
+                
+                // Close modal after a short delay
+                setTimeout(() => {
+                    const modal = document.getElementById('callModal');
+                    if (modal) {
+                        modal.style.display = 'none';
+                    }
+                }, 2000);
+
+            } catch (error) {
+                console.error('Call request error:', error);
+                showNotification(error.message || 'Failed to submit request. Please try again later.', 'error');
+            } finally {
+                // Re-enable submit button and restore text
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalBtnText;
+            }
+        });
+    }
+
+    // Handle newsletter subscription
+    const newsletterForm = document.getElementById('newsletterForm');
+    if (newsletterForm) {
+        newsletterForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitBtn = newsletterForm.querySelector('button[type="submit"]');
+            const emailInput = newsletterForm.querySelector('input[type="email"]');
+            
+            if (!emailInput) {
+                showNotification('Form error: Missing email field', 'error');
+                return;
+            }
+
+            const email = emailInput.value.trim();
+            
+            // Validation
+            if (!email) {
+                showNotification('Please enter your email address', 'error');
+                emailInput.focus();
+                return;
+            }
+            if (!validateEmail(email)) {
+                showNotification('Please enter a valid email address', 'error');
+                emailInput.focus();
+                return;
+            }
+
+            // Disable submit button and show loading state
+            submitBtn.disabled = true;
+            const originalBtnText = submitBtn.textContent;
+            submitBtn.textContent = 'Subscribing...';
+
+            try {
+                const response = await fetch(`${SERVER_URL}/api/subscribe`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Failed to subscribe');
+                }
+
+                showNotification('Thank you for subscribing!', 'success');
+                newsletterForm.reset();
+
+            } catch (error) {
+                console.error('Newsletter subscription error:', error);
+                showNotification(error.message || 'Failed to subscribe. Please try again later.', 'error');
+            } finally {
+                // Re-enable submit button and restore text
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalBtnText;
+            }
+        });
+    }
 
     // Call button functionality
     const callBtns = document.querySelectorAll('.hero-cta, [data-toggle="modal"][data-target="#callModal"]');
